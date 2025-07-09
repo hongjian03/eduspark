@@ -32,12 +32,10 @@ def load_cached_data():
 
 # 可用的模型列表（阿里百炼）
 AVAILABLE_MODELS = {
-    "deepseek-chat": "DeepSeek (默认)",
-    "qwen-plus": "通义千问 Plus",
-    "qwen-max": "通义千问 Max", 
-    "qwen-turbo": "通义千问 Turbo",
-    "baichuan2-turbo": "百川2 Turbo",
-    "yi-large": "零一万物 Large"
+    "deepseek-v3": "DeepSeek-v3 (默认)",
+    "deepseek-r1": "DeepSeek-r1",
+    "qwen-plus": "通义千问-plus", 
+    "qwen-max": "通义千问-max"
 }
 
 def main():
