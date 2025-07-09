@@ -83,10 +83,10 @@ def create_default_prompt(data_dicts: Dict[str, Any]) -> str:
 
 ```json
 {{
-  "country": "识别到的国家名称或null",
-  "degree": "识别到的学历名称或null", 
-  "major": "识别到的一级专业名称或null",
-  "sub_major": "识别到的二级专业名称或null"
+  "country": "识别到的国家名称",
+  "degree": "识别到的学历名称", 
+  "major": "识别到的一级专业名称",
+  "sub_major": "识别到的二级专业名称"
 }}
 ```
 
