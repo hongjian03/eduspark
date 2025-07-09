@@ -197,11 +197,7 @@ def main():
             else:
                 st.markdown("📚 **专业:** 未识别")
             with st.expander("🔍 详细信息"):
-                # 显示原始AI返回
-                if result.get('_raw_ai_response'):
-                    st.markdown("**🤖 AI原始返回:**")
-                    st.json(result['_raw_ai_response'])
-                
+                # 显示AI完整响应
                 if result.get('_full_ai_response'):
                     st.markdown("**📝 AI完整响应:**")
                     st.code(result['_full_ai_response'])
