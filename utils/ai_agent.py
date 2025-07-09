@@ -10,6 +10,7 @@ import json
 import re
 from typing import Dict, Any, Optional
 import streamlit as st
+import logging
 
 # LangChain导入
 from langchain_openai import ChatOpenAI
@@ -24,6 +25,8 @@ from langchain.prompts import PromptTemplate
 # 数据处理工具
 from .data_loader import get_country_list, get_degree_list, get_major_list, get_flat_major_mapping
 
+logger = logging.getLogger(__name__)
+
 
 def setup_langsmith():
     """设置LangSmith追踪"""
@@ -35,7 +38,7 @@ def setup_langsmith():
             os.environ["LANGCHAIN_PROJECT"] = "留学标签识别"
             return True
     except Exception as e:
-        print(f"LangSmith设置失败: {e}")
+        logger.error(f"LangSmith设置失败: {e}")
     return False
 
 
