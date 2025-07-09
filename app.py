@@ -98,6 +98,19 @@ def main():
     # 主界面布局
     col1, col2 = st.columns([1, 1])
     
+    # 读取所有标签池
+    country_options = list(data_dicts['countries'].keys())
+    degree_options = list(data_dicts['degrees'].keys())
+    major_options = list(data_dicts['majors'].keys())
+    # 默认二级专业池
+    default_sub_major_options = list(data_dicts['majors'][major_options[0]]['children'].keys())
+
+    # 读取AI识别结果（如果有）
+    ai_country = st.session_state.get('ai_country', country_options[0])
+    ai_degree = st.session_state.get('ai_degree', degree_options[0])
+    ai_major = st.session_state.get('ai_major', major_options[0])
+    ai_sub_major = st.session_state.get('ai_sub_major', default_sub_major_options[0])
+
     with col1:
         st.subheader("📝 输入区域")
         
@@ -146,10 +159,34 @@ def main():
                         st.session_state['last_result'] = result
                         st.session_state['last_input'] = user_input
                         
+                        # 自动联动下拉框
+                        if result.get('country') in country_options:
+                            st.session_state['ai_country'] = result['country']
+                        if result.get('degree') in degree_options:
+                            st.session_state['ai_degree'] = result['degree']
+                        if result.get('major') in major_options:
+                            st.session_state['ai_major'] = result['major']
+                            sub_major_list = list(data_dicts['majors'][result['major']]['children'].keys())
+                            if result.get('sub_major') in sub_major_list:
+                                st.session_state['ai_sub_major'] = result['sub_major']
+                            else:
+                                st.session_state['ai_sub_major'] = sub_major_list[0]
                     except Exception as e:
                         st.error(f"❌ 识别过程中出现错误: {str(e)}")
                         st.error("详细错误信息:")
                         st.code(traceback.format_exc())
+        # --- AI联动下拉框 ---
+        st.markdown("---")
+        st.subheader("🎯 标签选择模拟（AI识别后自动联动）")
+        # 国家下拉框
+        country_select = st.selectbox("意向目的地", country_options, index=country_options.index(ai_country), key="ai_country")
+        # 一级专业下拉框
+        major_select = st.selectbox("意向专业（一级）", major_options, index=major_options.index(ai_major), key="ai_major")
+        # 二级专业下拉框（根据一级专业动态变化）
+        sub_major_options = list(data_dicts['majors'][st.session_state['ai_major']]['children'].keys())
+        sub_major_select = st.selectbox("意向专业（二级）", sub_major_options, index=sub_major_options.index(ai_sub_major) if ai_sub_major in sub_major_options else 0, key="ai_sub_major")
+        # 学历下拉框
+        degree_select = st.selectbox("学历", degree_options, index=degree_options.index(ai_degree), key="ai_degree")
     
     with col2:
         st.subheader("📊 识别结果")
