@@ -156,11 +156,16 @@ def main():
     # 3. 模拟选项框
     st.markdown("---")
     st.subheader("🎯 标签选择模拟（AI识别后自动联动）")
-    country_select = st.selectbox("意向目的地", country_options, index=country_options.index(st.session_state.get('ai_country', country_options[0])), key="ai_country")
-    major_select = st.selectbox("意向专业（一级）", major_options, index=major_options.index(st.session_state.get('ai_major', major_options[0])), key="ai_major")
-    sub_major_options = list(data_dicts['majors'][st.session_state['ai_major']]['children'].keys())
-    sub_major_select = st.selectbox("意向专业（二级）", sub_major_options, index=sub_major_options.index(st.session_state.get('ai_sub_major', sub_major_options[0])) if st.session_state.get('ai_sub_major', sub_major_options[0]) in sub_major_options else 0, key="ai_sub_major")
-    degree_select = st.selectbox("学历", degree_options, index=degree_options.index(st.session_state.get('ai_degree', degree_options[0])), key="ai_degree")
+    cols = st.columns(4)
+    with cols[0]:
+        country_select = st.selectbox("意向目的地", country_options, index=country_options.index(st.session_state.get('ai_country', country_options[0])), key="ai_country")
+    with cols[1]:
+        major_select = st.selectbox("意向专业（一级）", major_options, index=major_options.index(st.session_state.get('ai_major', major_options[0])), key="ai_major")
+    with cols[2]:
+        sub_major_options = list(data_dicts['majors'][st.session_state['ai_major']]['children'].keys())
+        sub_major_select = st.selectbox("意向专业（二级）", sub_major_options, index=sub_major_options.index(st.session_state.get('ai_sub_major', sub_major_options[0])) if st.session_state.get('ai_sub_major', sub_major_options[0]) in sub_major_options else 0, key="ai_sub_major")
+    with cols[3]:
+        degree_select = st.selectbox("学历", degree_options, index=degree_options.index(st.session_state.get('ai_degree', degree_options[0])), key="ai_degree")
 
     # 4. 选择模型
     st.markdown("---")
