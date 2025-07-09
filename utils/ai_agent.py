@@ -10,7 +10,6 @@ import json
 import re
 from typing import Dict, Any, Optional
 import streamlit as st
-import logging
 
 # LangChain导入
 from langchain_openai import ChatOpenAI
@@ -21,30 +20,23 @@ except ImportError:
     from langchain.schema import HumanMessage, SystemMessage
 
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 
 # 数据处理工具
 from .data_loader import get_country_list, get_degree_list, get_major_list, get_flat_major_mapping
-
-logger = logging.getLogger(__name__)
 
 
 def setup_langsmith():
     """设置LangSmith追踪"""
     try:
         langchain_api_key = st.secrets.get("LANGCHAIN_API_KEY", "")
-        if langchain_api_key and langchain_api_key != "your_langchain_api_key_here":
+        if langchain_api_key:
             os.environ["LANGCHAIN_TRACING_V2"] = "true"
             os.environ["LANGCHAIN_API_KEY"] = langchain_api_key
-            os.environ["LANGCHAIN_PROJECT"] = "eduspark-tag-recognition"
-            print(f"✅ LangSmith追踪已启用，项目: eduspark-tag-recognition")
+            os.environ["LANGCHAIN_PROJECT"] = "留学标签识别"
             return True
-        else:
-            print("⚠️ LangSmith API密钥未配置或使用默认占位符，跳过追踪")
-            return False
     except Exception as e:
-        print(f"❌ LangSmith设置失败: {e}")
-        return False
+        print(f"LangSmith设置失败: {e}")
+    return False
 
 
 def create_default_prompt(data_dicts: Dict[str, Any]) -> str:
@@ -90,23 +82,22 @@ def create_default_prompt(data_dicts: Dict[str, Any]) -> str:
 请严格按照以下JSON格式输出，不要包含任何其他文本：
 
 ```json
-{{{{{{{{
+{{
   "country": "识别到的国家名称或null",
   "degree": "识别到的学历名称或null", 
   "major": "识别到的一级专业名称或null",
   "sub_major": "识别到的二级专业名称或null"
-}}}}}}}}
+}}
 ```
 
 ## 注意事项
 
-1. 如果某个标签无法识别，不允许返回null，严禁返回空，必须选择一个最接近的选项
+1. 如果某个标签无法识别，请返回最接近的选项，严禁返回空
 2. 专业必须严格按照一级→二级的包含关系
 3. 只能使用标签池中的准确名称，不能自创或修改
 4. 输出必须是有效的JSON格式
 
 现在请分析用户输入并提取标签：
-{{input}}
 """
     
     return prompt
@@ -153,23 +144,28 @@ def create_ai_agent(model_name: str, data_dicts: Dict[str, Any], custom_prompt: 
             self.llm = llm
             self.system_prompt = system_prompt
             self.data_dicts = data_dicts
-            # 构建PromptTemplate和LLMChain
-            self.prompt = PromptTemplate(
-                input_variables=["input"],
-                template=self.system_prompt
-            )
-            self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
+            
         def extract(self, user_input: str) -> Dict[str, Any]:
             """提取标签"""
             try:
-                # 用LLMChain调用，支持LangSmith追踪
-                response = self.chain.invoke({"input": user_input})
-                response_text = response['text'] if isinstance(response, dict) and 'text' in response else str(response)
+                # 创建消息
+                messages = [
+                    SystemMessage(content=self.system_prompt),
+                    HumanMessage(content=user_input)
+                ]
+                
+                # 调用模型
+                response = self.llm(messages)
+                response_text = response.content
+                
                 # 解析JSON响应
                 result = self._parse_response(response_text)
+                
                 # 验证和标准化结果
                 validated_result = self._validate_result(result)
+                
                 return validated_result
+                
             except Exception as e:
                 print(f"标签提取错误: {e}")
                 return {
