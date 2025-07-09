@@ -21,6 +21,7 @@ except ImportError:
     from langchain.schema import HumanMessage, SystemMessage
 
 from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
 
 # 数据处理工具
 from .data_loader import get_country_list, get_degree_list, get_major_list, get_flat_major_mapping
@@ -147,28 +148,23 @@ def create_ai_agent(model_name: str, data_dicts: Dict[str, Any], custom_prompt: 
             self.llm = llm
             self.system_prompt = system_prompt
             self.data_dicts = data_dicts
-            
+            # 构建PromptTemplate和LLMChain
+            self.prompt = PromptTemplate(
+                input_variables=["input"],
+                template=self.system_prompt
+            )
+            self.chain = LLMChain(llm=self.llm, prompt=self.prompt)
         def extract(self, user_input: str) -> Dict[str, Any]:
             """提取标签"""
             try:
-                # 创建消息
-                messages = [
-                    SystemMessage(content=self.system_prompt),
-                    HumanMessage(content=user_input)
-                ]
-                
-                # 调用模型
-                response = self.llm(messages)
-                response_text = response.content
-                
+                # 用LLMChain调用，支持LangSmith追踪
+                response = self.chain.invoke({"input": user_input})
+                response_text = response['text'] if isinstance(response, dict) and 'text' in response else str(response)
                 # 解析JSON响应
                 result = self._parse_response(response_text)
-                
                 # 验证和标准化结果
                 validated_result = self._validate_result(result)
-                
                 return validated_result
-                
             except Exception as e:
                 print(f"标签提取错误: {e}")
                 return {
