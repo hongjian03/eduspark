@@ -65,12 +65,12 @@ DEFAULT_PROMPT_TEMPLATE = '''
 ## 输出格式
 请严格按照以下JSON格式输出，不要包含任何其他文本：
 ```json
-{{{{
+{{
   "country": "识别到的国家名称或null",
   "degree": "识别到的学历名称或null", 
   "major": "识别到的一级专业名称或null",
   "sub_major": "识别到的二级专业名称或null"
-}}}}
+}}
 ```
 
 ## 注意事项
@@ -197,7 +197,19 @@ def main():
             else:
                 st.markdown("📚 **专业:** 未识别")
             with st.expander("🔍 详细信息"):
-                st.json(result)
+                # 显示原始AI返回
+                if result.get('_raw_ai_response'):
+                    st.markdown("**🤖 AI原始返回:**")
+                    st.json(result['_raw_ai_response'])
+                
+                if result.get('_full_ai_response'):
+                    st.markdown("**📝 AI完整响应:**")
+                    st.code(result['_full_ai_response'])
+                
+                # 显示验证后的结果
+                st.markdown("**✅ 验证后结果:**")
+                display_result = {k: v for k, v in result.items() if not k.startswith('_')}
+                st.json(display_result)
         else:
             st.warning("⚠️ 未能识别出标签信息")
     else:

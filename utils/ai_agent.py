@@ -159,10 +159,14 @@ def create_ai_agent(model_name: str, data_dicts: Dict[str, Any], custom_prompt: 
                 response_text = response.content
                 
                 # 解析JSON响应
-                result = self._parse_response(response_text)
+                raw_result = self._parse_response(response_text)
                 
                 # 验证和标准化结果
-                validated_result = self._validate_result(result)
+                validated_result = self._validate_result(raw_result)
+                
+                # 在返回结果中包含原始AI返回和验证后的结果
+                validated_result['_raw_ai_response'] = raw_result
+                validated_result['_full_ai_response'] = response_text
                 
                 return validated_result
                 
@@ -173,7 +177,9 @@ def create_ai_agent(model_name: str, data_dicts: Dict[str, Any], custom_prompt: 
                     "degree": None,
                     "major": None,
                     "sub_major": None,
-                    "error": str(e)
+                    "error": str(e),
+                    "_raw_ai_response": None,
+                    "_full_ai_response": None
                 }
         
         def _parse_response(self, response_text: str) -> Dict[str, Any]:
