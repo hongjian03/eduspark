@@ -81,7 +81,6 @@ DEFAULT_PROMPT_TEMPLATE = '''
 4. 输出必须是有效的JSON格式
 
 现在请分析用户输入并提取标签：
-{input}
 '''
 
 def main():
