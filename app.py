@@ -65,12 +65,12 @@ DEFAULT_PROMPT_TEMPLATE = '''
 ## 输出格式
 请严格按照以下JSON格式输出，不要包含任何其他文本：
 ```json
-{{{{
+{{
   "country": "识别到的国家名称或null",
   "degree": "识别到的学历名称或null", 
   "major": "识别到的一级专业名称或null",
   "sub_major": "识别到的二级专业名称或null"
-}}}}
+}}
 ```
 
 ## 注意事项
