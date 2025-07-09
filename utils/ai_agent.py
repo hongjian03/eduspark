@@ -33,14 +33,18 @@ def setup_langsmith():
     """设置LangSmith追踪"""
     try:
         langchain_api_key = st.secrets.get("LANGCHAIN_API_KEY", "")
-        if langchain_api_key:
+        if langchain_api_key and langchain_api_key != "your_langchain_api_key_here":
             os.environ["LANGCHAIN_TRACING_V2"] = "true"
             os.environ["LANGCHAIN_API_KEY"] = langchain_api_key
-            os.environ["LANGCHAIN_PROJECT"] = "留学标签识别"
+            os.environ["LANGCHAIN_PROJECT"] = "eduspark-tag-recognition"
+            print(f"✅ LangSmith追踪已启用，项目: eduspark-tag-recognition")
             return True
+        else:
+            print("⚠️ LangSmith API密钥未配置或使用默认占位符，跳过追踪")
+            return False
     except Exception as e:
-        st.error(f"LangSmith设置失败: {e}")
-    return False
+        print(f"❌ LangSmith设置失败: {e}")
+        return False
 
 
 def create_default_prompt(data_dicts: Dict[str, Any]) -> str:
@@ -86,12 +90,12 @@ def create_default_prompt(data_dicts: Dict[str, Any]) -> str:
 请严格按照以下JSON格式输出，不要包含任何其他文本：
 
 ```json
-{{
+{{{{{{{{
   "country": "识别到的国家名称或null",
   "degree": "识别到的学历名称或null", 
   "major": "识别到的一级专业名称或null",
   "sub_major": "识别到的二级专业名称或null"
-}}
+}}}}}}}}
 ```
 
 ## 注意事项
@@ -102,6 +106,7 @@ def create_default_prompt(data_dicts: Dict[str, Any]) -> str:
 4. 输出必须是有效的JSON格式
 
 现在请分析用户输入并提取标签：
+{{input}}
 """
     
     return prompt
