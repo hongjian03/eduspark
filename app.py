@@ -38,6 +38,53 @@ AVAILABLE_MODELS = {
     "qwen-max": "通义千问-max"
 }
 
+# 原始模板字符串，带变量名
+DEFAULT_PROMPT_TEMPLATE = '''
+你是一个专业的留学标签识别助手。你的任务是从用户输入的自然语言中准确提取出国家、专业、学历三个标签。
+
+## 标签池（你只能从以下标签中选择，不能自创标签）
+
+### 国家标签池：
+{country_list}
+
+### 学历标签池：
+{degree_list}
+
+### 专业标签池：
+{major_list}
+
+## 提取规则
+
+1. **国家标签**：从国家标签池中选择最匹配的国家名称
+2. **学历标签**：从学历标签池中选择最匹配的学历名称
+3. **专业标签**：必须输出"一级专业+二级专业"的组合
+   - 如果用户提到的是二级专业，需要找到对应的一级专业
+   - 格式：一级专业 → 二级专业
+   - 例如：理工科 → 计算机、商科 → 金融学
+
+## 输出格式
+
+请严格按照以下JSON格式输出，不要包含任何其他文本：
+
+```json
+{{
+  "country": "识别到的国家名称或null",
+  "degree": "识别到的学历名称或null", 
+  "major": "识别到的一级专业名称或null",
+  "sub_major": "识别到的二级专业名称或null"
+}}
+```
+
+## 注意事项
+
+1. 如果某个标签无法识别，不允许返回null，严禁返回空，必须选择一个最接近的选项
+2. 专业必须严格按照一级→二级的包含关系
+3. 只能使用标签池中的准确名称，不能自创或修改
+4. 输出必须是有效的JSON格式
+
+现在请分析用户输入并提取标签：
+'''
+
 def main():
     """主函数"""
     st.title("🎓 留学标签识别系统")
@@ -85,10 +132,25 @@ def main():
         else:
             with st.spinner("🤖 AI正在分析中..."):
                 try:
+                    # 生成变量池
+                    country_list = "、".join(country_options)
+                    degree_list = "、".join(degree_options)
+                    major_list = "\n".join([
+                        f"{k}\n  - " + "\n  - ".join(v['children'].keys())
+                        for k, v in data_dicts['majors'].items()
+                    ])
+                    # 判断自定义提示词是否包含变量名
+                    prompt_to_use = st.session_state.get('custom_prompt', DEFAULT_PROMPT_TEMPLATE)
+                    if any(x in prompt_to_use for x in ["{country_list}", "{degree_list}", "{major_list}"]):
+                        prompt_to_use = prompt_to_use.format(
+                            country_list=country_list,
+                            degree_list=degree_list,
+                            major_list=major_list
+                        )
                     agent = create_ai_agent(
                         model_name=st.session_state.get('selected_model', list(AVAILABLE_MODELS.keys())[0]),
                         data_dicts=data_dicts,
-                        custom_prompt=st.session_state.get('custom_prompt', None)
+                        custom_prompt=prompt_to_use
                     )
                     result = extract_tags(agent, user_input)
                     st.session_state['last_result'] = result
@@ -182,9 +244,8 @@ def main():
     # 5. 自定义提示词
     st.markdown("---")
     st.subheader("🔧 自定义提示词（可选）")
-    default_prompt = create_default_prompt(data_dicts)
     if not st.session_state.get('custom_prompt'):
-        st.session_state['custom_prompt'] = default_prompt
+        st.session_state['custom_prompt'] = DEFAULT_PROMPT_TEMPLATE
     custom_prompt = st.text_area(
         "自定义提示词",
         value=st.session_state['custom_prompt'],
