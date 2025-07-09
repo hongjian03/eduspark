@@ -62,6 +62,7 @@ def main():
     degree_options = list(data_dicts['degrees'].keys())
     major_options = list(data_dicts['majors'].keys())
     default_sub_major_options = list(data_dicts['majors'][major_options[0]]['children'].keys())
+    # 读取AI识别结果（如果有）
     ai_country = st.session_state.get('ai_country', country_options[0])
     ai_degree = st.session_state.get('ai_degree', degree_options[0])
     ai_major = st.session_state.get('ai_major', major_options[0])
@@ -84,7 +85,6 @@ def main():
         else:
             with st.spinner("🤖 AI正在分析中..."):
                 try:
-                    # 创建AI代理
                     agent = create_ai_agent(
                         model_name=st.session_state.get('selected_model', list(AVAILABLE_MODELS.keys())[0]),
                         data_dicts=data_dicts,
@@ -93,18 +93,20 @@ def main():
                     result = extract_tags(agent, user_input)
                     st.session_state['last_result'] = result
                     st.session_state['last_input'] = user_input
-                    # 自动联动下拉框
+                    # 批量更新session_state，避免控件冲突
+                    update_dict = {}
                     if result.get('country') in country_options:
-                        st.session_state['ai_country'] = result['country']
+                        update_dict['ai_country'] = result['country']
                     if result.get('degree') in degree_options:
-                        st.session_state['ai_degree'] = result['degree']
+                        update_dict['ai_degree'] = result['degree']
                     if result.get('major') in major_options:
-                        st.session_state['ai_major'] = result['major']
+                        update_dict['ai_major'] = result['major']
                         sub_major_list = list(data_dicts['majors'][result['major']]['children'].keys())
                         if result.get('sub_major') in sub_major_list:
-                            st.session_state['ai_sub_major'] = result['sub_major']
+                            update_dict['ai_sub_major'] = result['sub_major']
                         else:
-                            st.session_state['ai_sub_major'] = sub_major_list[0]
+                            update_dict['ai_sub_major'] = sub_major_list[0]
+                    st.session_state.update(update_dict)
                 except Exception as e:
                     st.error(f"❌ 识别过程中出现错误: {str(e)}")
                     st.error("详细错误信息:")
