@@ -38,7 +38,7 @@ def setup_langsmith():
             os.environ["LANGCHAIN_PROJECT"] = "留学标签识别"
             return True
     except Exception as e:
-        logger.error(f"LangSmith设置失败: {e}")
+        st.error(f"LangSmith设置失败: {e}")
     return False
 
 
